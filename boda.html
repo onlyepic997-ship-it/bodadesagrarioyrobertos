@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boda de Sagrario y Roberto</title>
+
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:linear-gradient(135deg,#ffb6c1,#ffe4ec);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:20px;
+    width:360px;
+    text-align:center;
+    box-shadow:0 0 20px rgba(0,0,0,0.2);
+}
+
+h1{
+    color:#ff4081;
+}
+
+button{
+    background:#ff4081;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:16px;
+    margin-top:10px;
+}
+
+button:hover{
+    background:#e91e63;
+}
+
+input{
+    width:90%;
+    padding:10px;
+    border-radius:10px;
+    border:2px solid #ff4081;
+    margin-top:10px;
+    font-size:16px;
+}
+
+#formulario{
+    display:none;
+}
+
+.lista{
+    margin-top:20px;
+    background:#fff0f5;
+    border-radius:10px;
+    padding:10px;
+    max-height:250px;
+    overflow:auto;
+    text-align:left;
+}
+
+.persona{
+    padding:5px;
+    border-bottom:1px solid #ffc1d5;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h1>💍 Boda de Sagrario y Roberto 💍</h1>
+
+<button onclick="mostrarFormulario()">
+Inscribirse a la boda
+</button>
+
+<div id="formulario">
+    <input type="text" id="nombre" placeholder="Tu nombre">
+    <br>
+    <button onclick="inscribir()">Inscribir</button>
+</div>
+
+<div class="lista" id="lista">
+<b>Invitados:</b>
+</div>
+
+</div>
+
+<script>
+
+// ===========================
+// PON TUS DATOS DE SUPABASE
+// ===========================
+
+const SUPABASE_URL = "https://kkahftndbbfpsbrtxdew.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_xKzog74y6jO5azDUQNozFg_tVSUDZvK";
+
+const supabaseClient = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+// ===========================
+
+function mostrarFormulario(){
+    document.getElementById("formulario").style.display = "block";
+}
+
+async function inscribir(){
+
+    let nombre = document.getElementById("nombre").value.trim();
+
+    if(nombre == ""){
+        alert("Pon tu nombre");
+        return;
+    }
+
+    localStorage.setItem("miNombreBoda", nombre);
+
+    // Guardar en la nube
+    await supabaseClient
+    .from("invitados")
+    .insert([
+        { nombre: nombre }
+    ]);
+
+    document.getElementById("nombre").value = "";
+
+    cargarLista();
+}
+
+async function cargarLista(){
+
+    let lista = document.getElementById("lista");
+
+    lista.innerHTML = "<b>Invitados:</b>";
+
+    let miNombre = localStorage.getItem("miNombreBoda");
+
+    const { data, error } = await supabaseClient
+    .from("invitados")
+    .select("*");
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    data.forEach(persona => {
+
+        let div = document.createElement("div");
+
+        div.className = "persona";
+
+        if(persona.nombre == miNombre){
+            div.innerHTML = "💖 " + persona.nombre + " (Tu)";
+        }else{
+            div.innerHTML = "👤 " + persona.nombre;
+        }
+
+        lista.appendChild(div);
+    });
+}
+
+cargarLista();
+
+</script>
+
+</body>
+</html>
+
